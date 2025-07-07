@@ -3,7 +3,7 @@
  */
 
 class AudioClient {
-    constructor(serverUrl = 'ws://localhost:8765') {
+    constructor(serverUrl = 'wss://adk-audio-assistant-893490980727.us-central1.run.app') {
         this.serverUrl = serverUrl;
         this.ws = null;
         this.recorder = null;
@@ -19,6 +19,7 @@ class AudioClient {
         this.onReady = () => {};
         this.onAudioReceived = () => {};
         this.onTextReceived = () => {};
+        this.onUserTextReceived = () => {};
         this.onTurnComplete = () => {};
         this.onError = () => {};
         this.onInterrupted = () => {};
@@ -116,6 +117,10 @@ class AudioClient {
                         else if (message.type === 'text') {
                             // Handle receiving text from server
                             this.onTextReceived(message.data);
+                        }
+                        else if (message.type === 'user_text') {
+                            // Handle receiving user transcription from server
+                            this.onUserTextReceived(message.data);
                         }
                         else if (message.type === 'turn_complete') {
                             // Model is done speaking

@@ -3,7 +3,7 @@
  */
 
 class MultimodalClient extends AudioClient {
-    constructor(serverUrl = 'wss://adk-audio-assistant-893490980727.us-central1.run.app') {
+    constructor(serverUrl = 'ws://localhost:8765') {
         super(serverUrl);
 
         // Video streaming properties

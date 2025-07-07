@@ -11,18 +11,16 @@ from google.adk.runners import Runner
 from google.adk.agents.run_config import RunConfig, StreamingMode
 from google.adk.sessions.in_memory_session_service import InMemorySessionService
 from google.genai import types
-from dotenv import load_dotenv
-
-load_dotenv()
 
 # Import common components
-from common import (
+from config.config import (
     BaseWebSocketServer,
     logger,
     MODEL,
     VOICE_NAME,
     SEND_SAMPLE_RATE,
     SYSTEM_INSTRUCTION,
+    PROJECT_ID,
     get_order_status,
 )
 
@@ -47,7 +45,7 @@ class MultimodalADKServer(BaseWebSocketServer):
 
         # Initialize ADK components
         self.agent = Agent(
-            name="customer_service_agent",
+            name=PROJECT_ID,
             model=MODEL,
             instruction=SYSTEM_INSTRUCTION,
             tools=[order_status_tool],
@@ -63,14 +61,14 @@ class MultimodalADKServer(BaseWebSocketServer):
 
         # Create session for this client
         session = await self.session_service.create_session(
-            app_name="multimodal_assistant",
+            app_name=PROJECT_ID,
             user_id=f"user_{client_id}",
             session_id=f"session_{client_id}",
         )
 
         # Create runner
         runner = Runner(
-            app_name="multimodal_assistant",
+            app_name=PROJECT_ID,
             agent=self.agent,
             session_service=self.session_service,
         )

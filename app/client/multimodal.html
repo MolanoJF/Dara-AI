@@ -171,7 +171,7 @@
 
     <script>
         // Initialize variables
-        const client = new MultimodalClient('wss://adk-audio-assistant-234439745674.us-central1.run.app');
+        const client = new MultimodalClient('wss://adk-audio-assistant-893490980727.us-central1.run.app');
         client.maxReconnectAttempts = 0;
         let isRecording = false;
         let isVideoActive = false;
@@ -357,7 +357,7 @@
                     isRecording = true;
                     micButton.classList.add('mic-active');
                     micStatus.textContent = 'Recording... Speak now';
-                    addMessage("...", "user");
+                    // Don't add "..." placeholder since we'll get real transcription from server
                     if (isVideoActive && !client.videoSendInterval) {
                         client.startVideoStream(1);
                     }
@@ -374,12 +374,6 @@
             isRecording = false;
             micButton.classList.remove('mic-active');
             micStatus.textContent = 'Click the icon to start recording';
-
-            const messages = Array.from(transcriptContainer.children);
-            const lastMessage = messages[messages.length - 1];
-            if (lastMessage && lastMessage.textContent === '...' && lastMessage.classList.contains('opacity-60')) {
-                lastMessage.remove();
-            }
         }
 
         // Initialize multimodal client
@@ -419,11 +413,6 @@
 
                 client.onTextReceived = (text) => {
                     if (text && text.trim()) {
-                        const userMessages = transcriptContainer.querySelectorAll('.opacity-60.italic');
-                        if (userMessages.length > 0 && userMessages[userMessages.length -1].textContent === '...') {
-                             userMessages[userMessages.length -1].remove();
-                        }
-
                         if (isFirstChunk) {
                             currentResponseText = text;
                             addMessage(text, "assistant");
@@ -439,6 +428,25 @@
                             }
                         }
                          transcriptOuterContainer.scrollTop = transcriptOuterContainer.scrollHeight;
+                    }
+                };
+
+                client.onUserTextReceived = (text) => {
+                    if (text && text.trim()) {
+                        // Add or update user message
+                        const messages = Array.from(transcriptContainer.children);
+                        const lastMessage = messages[messages.length - 1];
+                        
+                        // Check if the last message is a user message (has gray-200 background)
+                        if (lastMessage && lastMessage.classList.contains('bg-gray-200')) {
+                            // Update existing user message
+                            lastMessage.textContent = text;
+                        } else {
+                            // Add new user message
+                            addMessage(text, "user");
+                        }
+                        
+                        transcriptOuterContainer.scrollTop = transcriptOuterContainer.scrollHeight;
                     }
                 };
 

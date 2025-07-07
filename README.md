@@ -35,6 +35,7 @@ The project demonstrates how to go beyond the standard ADK CLI by creating a cus
 - **Video Analysis**: Process webcam or screen sharing video frames
 - **WebSocket Communication**: Low-latency bidirectional communication
 - **Function Calling**: Demonstration of ADK tool integration with a mock order status function
+- **Google Search Grounding**: Access to current information on the web for up-to-date responses
 - **Full ADK Integration**: Uses ADK's `LiveRequestQueue` and `Runner` for communication with Gemini
 
 ## Getting Started
@@ -97,6 +98,7 @@ The server manages several concurrent tasks:
 - Audio processing and streaming
 - Video frame processing
 - Response handling from Gemini
+- Google Search grounding for current information
 
 ### Client Implementation
 
