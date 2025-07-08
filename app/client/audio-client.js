@@ -118,7 +118,7 @@ class AudioClient {
                             // Handle receiving text from server
                             this.onTextReceived(message.data);
                         }
-                        else if (message.type === 'user_text') {
+                        else if (message.type === 'user_text' || message.type === 'input_text') {
                             // Handle receiving user transcription from server
                             this.onUserTextReceived(message.data);
                         }

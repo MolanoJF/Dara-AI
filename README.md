@@ -36,6 +36,7 @@ The project demonstrates how to go beyond the standard ADK CLI by creating a cus
 - **WebSocket Communication**: Low-latency bidirectional communication
 - **Function Calling**: Demonstration of ADK tool integration with a mock order status function
 - **Google Search Grounding**: Access to current information on the web for up-to-date responses
+- **Long-term Memory**: Mem0 integration for persistent memory across conversations
 - **Full ADK Integration**: Uses ADK's `LiveRequestQueue` and `Runner` for communication with Gemini
 
 ## Getting Started
@@ -62,7 +63,14 @@ The project demonstrates how to go beyond the standard ADK CLI by creating a cus
    pip install -r requirements.txt
    ```
 
-3. Start the server
+3. Set up environment variables
+   Create a `.env` file in the `app/server` directory with:
+   ```
+   GOOGLE_API_KEY=your_google_api_key_here
+   MEM0_API_KEY=your_mem0_api_key_here
+   ```
+
+4. Start the server
    ```
    ./start_servers.sh
    ```
@@ -99,6 +107,15 @@ The server manages several concurrent tasks:
 - Video frame processing
 - Response handling from Gemini
 - Google Search grounding for current information
+- Long-term memory storage and retrieval using Mem0
+
+### Memory Integration
+
+The assistant now has persistent memory capabilities through Mem0:
+- **Conversation Storage**: Automatically saves conversations after each turn
+- **Memory Search**: Can search previous conversations for context
+- **Personal Details**: Remembers user preferences, family members, and important information
+- **Cross-Session**: Memory persists across different chat sessions
 
 ### Client Implementation
 

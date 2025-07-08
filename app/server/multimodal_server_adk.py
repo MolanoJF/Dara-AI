@@ -1,18 +1,25 @@
 import asyncio
 import json
 import base64
-import logging
-import os
 import traceback
 
 # Import Google ADK components
-from google.adk.agents import Agent, LiveRequestQueue
+from google.adk.agents import Agent
+from google.adk.agents.live_request_queue import LiveRequestQueue
 from google.adk.runners import Runner
 from google.adk.agents.run_config import RunConfig, StreamingMode
 from google.adk.sessions.in_memory_session_service import InMemorySessionService
+from google.adk.tools import google_search
 from google.genai import types
 
-# Import common components
+# Import agent tools
+from agent_tools import (	
+    order_status_tool, 
+    search_memory, 
+    save_memory
+    )
+
+# Import config components
 from config.config import (
     BaseWebSocketServer,
     logger,
@@ -21,20 +28,7 @@ from config.config import (
     SEND_SAMPLE_RATE,
     SYSTEM_INSTRUCTION,
     PROJECT_ID,
-    get_order_status,
 )
-
-# Function tool for order status
-def order_status_tool(order_id: str):
-    """Get the current status and details of an order.
-
-    Args:
-        order_id: The order ID to look up.
-
-    Returns:
-        Dictionary containing order status details
-    """
-    return get_order_status(order_id)
 
 
 class MultimodalADKServer(BaseWebSocketServer):
@@ -48,7 +42,7 @@ class MultimodalADKServer(BaseWebSocketServer):
             name=PROJECT_ID,
             model=MODEL,
             instruction=SYSTEM_INSTRUCTION,
-            tools=[order_status_tool],
+            tools=[order_status_tool, search_memory, save_memory],
         )
 
         # Create session service
@@ -184,23 +178,29 @@ class MultimodalADKServer(BaseWebSocketServer):
                     event_str = str(event)
 
                     # If there's a session resumption update, store the session ID
-                    if hasattr(event, 'session_resumption_update') and event.session_resumption_update:
-                        update = event.session_resumption_update
-                        if update.resumable and update.new_handle:
-                            current_session_id = update.new_handle
-                            logger.info(f"New SESSION: {current_session_id}")
-                            # Send session ID to client
-                            session_id_msg = json.dumps({
-                                "type": "session_id", 
-                                "data": current_session_id
-                            })
-                            await websocket.send(session_id_msg)
+                    # Handle session resumption gracefully to avoid attribute errors
+                    try:
+                        if hasattr(event, 'session_resumption_update') and event.session_resumption_update:
+                            update = event.session_resumption_update
+                            if (hasattr(update, 'resumable') and hasattr(update, 'new_handle') 
+                                and update.resumable and update.new_handle):
+                                current_session_id = update.new_handle
+                                logger.info(f"New SESSION: {current_session_id}")
+                                # Send session ID to client
+                                session_id_msg = json.dumps({
+                                    "type": "session_id", 
+                                    "data": current_session_id
+                                })
+                                await websocket.send(session_id_msg)
+                    except AttributeError:
+                        # Session resumption not available in this event type
+                        pass
 
                     # Handle content
                     if event.content and event.content.parts:
                         for part in event.content.parts:
                             # Process audio content
-                            if hasattr(part, "inline_data") and part.inline_data:
+                            if hasattr(part, "inline_data") and part.inline_data and part.inline_data.data:
                                 b64_audio = base64.b64encode(part.inline_data.data).decode("utf-8")
                                 await websocket.send(json.dumps({"type": "audio", "data": b64_audio}))
 
@@ -208,7 +208,8 @@ class MultimodalADKServer(BaseWebSocketServer):
                             if hasattr(part, "text") and part.text:
                                 # Check if this is user or model text based on content role
                                 if hasattr(event.content, "role") and event.content.role == "user":
-                                    # User text shouldn't be sent to the client
+                                    # Send the transcribed input text to the client
+                                    await websocket.send(json.dumps({"type": "input_text", "data": part.text}))
                                     input_texts.append(part.text)
                                 else:
                                     # From the logs, we can see the duplicated text issue happens because
@@ -251,6 +252,8 @@ class MultimodalADKServer(BaseWebSocketServer):
                             # Get unique texts to prevent duplication
                             unique_texts = list(dict.fromkeys(output_texts))
                             logger.info(f"Output transcription: {' '.join(unique_texts)}")
+
+
 
                         # Reset for next turn
                         input_texts = []

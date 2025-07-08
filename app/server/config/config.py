@@ -20,13 +20,14 @@ LOCATION = "us-central1"  # Required when VERTEX_API=true
 
 # Model Configuration
 MODEL = "gemini-2.0-flash-live-preview-04-09"
-VOICE_NAME = "Charon"
+VOICE_NAME = "Orus"
 # Gemini TTS models support the following 30 voice options in the voice_name field:
 # Zephyr: Bright, Puck: Upbeat, Charon: Informative, Kore: Firm, 
 # Fenrir: Excitable, Leda: Youthful, Orus: Firm, Aoede: Breez
 
 # API Keys (loaded from environment variables)
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")  # Optional - only needed for dev endpoint (VERTEX_API=false)
+MEM0_API_KEY = os.getenv("MEM0_API_KEY")  # Required for Mem0 long-term memory functionality
 
 # Audio sample rates for input/output
 RECEIVE_SAMPLE_RATE = 24000  # Rate of audio received from Gemini

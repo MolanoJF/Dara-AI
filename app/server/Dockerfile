@@ -8,6 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code and directories
 COPY multimodal_server_adk.py .
+COPY agent_tools.py .
 COPY config/ ./config/
 COPY tools/ ./tools/
 COPY websocket/ ./websocket/
