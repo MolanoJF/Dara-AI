@@ -45,16 +45,15 @@ The project demonstrates how to go beyond the standard ADK CLI by creating a cus
 
 - Google Cloud project with API access
 - Python 3.9+
-- Node.js for client development (if modifying)
 - Google ADK installed (`pip install google-adk`)
-- PyAudio for audio processing
+- A browser with microphone access (and camera or screen-sharing access for video)
 
 ### Installation
 
 1. Clone this repository
    ```
-   git clone https://github.com/SaschaHeyer/gen-ai-livestream.git
-   cd gen-ai-livestream/agents/agent-development-kit/live-api
+   git clone https://github.com/MolanoJF/Dara-AI.git
+   cd Dara-AI
    ```
 
 2. Install server dependencies
@@ -64,6 +63,8 @@ The project demonstrates how to go beyond the standard ADK CLI by creating a cus
    ```
 
 3. Set up environment variables
+   The checked-in configuration enables Vertex AI and hard-codes a project ID in `app/server/config/config.py`. Set it to your Google Cloud project, configure application default credentials, and enable the required Vertex AI APIs. The configured preview model may no longer be available. For the alternative developer API endpoint, set `VERTEX_API = False` in that file.
+
    Create a `.env` file in the `app/server` directory with:
    ```
    GOOGLE_API_KEY=your_google_api_key_here
@@ -75,10 +76,11 @@ The project demonstrates how to go beyond the standard ADK CLI by creating a cus
    ./start_servers.sh
    ```
 
-4. Open the client in your browser
+5. In a second terminal, serve the client from the repository root:
+   ```bash
+   python -m http.server 8000 --directory app/client
    ```
-   open app/client/multimodal.html
-   ```
+   Open [http://localhost:8000/multimodal.html](http://localhost:8000/multimodal.html). The client connects to `ws://localhost:8765`.
 
 ## Deployment
 
