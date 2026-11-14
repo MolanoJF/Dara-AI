@@ -1,136 +1,55 @@
-# ADK + Vertex AI Live API Demo
+# Dara AI
 
-A demonstration project showcasing how to build real-time, streaming multimodal experiences using Google's Agent Development Kit (ADK) with the Vertex AI Live API.
+Dara AI is an experimental browser-based multimodal assistant. A Python WebSocket server uses Google's Agent Development Kit (ADK) to stream audio and video to a Gemini Live model; the browser provides microphone, camera, screen-sharing, and transcript controls.
 
-## Overview
+![Dara AI client showing the video feed, transcript panel and microphone controls](docs/screenshots/client.png)
 
-This repository contains a complete implementation of a multimodal assistant that can:
+*The client in its idle state, with no server connection or conversation.*
 
-- Process real-time audio input from a microphone
-- Analyze video input from webcam or screen sharing
-- Stream responses as audio and text
-- Showcase function calling capabilities with the ADK
+## What is included
 
-The project demonstrates how to go beyond the standard ADK CLI by creating a custom server implementation that integrates directly with the Live API streaming functionality.
+- Browser audio recording and playback, plus webcam or screen capture.
+- A WebSocket server using ADK's `LiveRequestQueue` and `Runner`.
+- An example order-status tool and Mem0 memory tools.
+- Separate client and server Docker configurations and a [Cloud Run deployment guide](app/server/DEPLOYMENT.md).
 
-## Repository Structure
+This is a 2025 demo, not a maintained production integration. Its configured model is `gemini-2.0-flash-live-preview-04-09`; model availability and current ADK compatibility need to be checked before use. Google Search is imported in the server but is not registered as an agent tool in the checked-in code.
 
-```
-- adk_audio_to_audio.py      # Standalone ADK audio assistant example
-- app/
-  - client/                  # Frontend web client
-    - audio-client.js        # Audio WebSocket client base class
-    - multimodal-client.js   # Extended client with video capabilities
-    - multimodal.html        # Web UI for the demo
-  - server/                  # Backend server implementation
-    - common.py              # Shared utilities and mock functions
-    - multimodal_server_adk.py  # ADK integration with WebSockets
-    - start_servers.sh       # Server startup script
-    - DEPLOYMENT.md          # Deployment instructions
+## Run locally
+
+You need Python, a browser with microphone permissions, Google model access, and a Mem0 API key. Audio, video, and conversation data are sent to external services. Review the code and service settings before sharing sensitive information.
+
+```bash
+git clone https://github.com/MolanoJF/Dara-AI.git
+cd Dara-AI
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r app/server/requirements.txt
 ```
 
-## Key Features
+Configure ADK's Google credentials for your chosen backend. For a Gemini Developer API setup, set `GOOGLE_API_KEY`; for Vertex AI, configure application default credentials and the appropriate Google Cloud project and location. Set `MEM0_API_KEY` as well: the code constructs a Mem0 client at import time. The `PROJECT_ID` in `app/server/config/config.py` is used as the ADK agent and app name; the `VERTEX_API` flag in that file is not wired to the server's backend selection.
 
-- **Bidirectional Audio Streaming**: Real-time voice conversation with the Gemini model
-- **Video Analysis**: Process webcam or screen sharing video frames
-- **WebSocket Communication**: Low-latency bidirectional communication
-- **Function Calling**: Demonstration of ADK tool integration with a mock order status function
-- **Google Search Grounding**: Access to current information on the web for up-to-date responses
-- **Long-term Memory**: Mem0 integration for persistent memory across conversations
-- **Full ADK Integration**: Uses ADK's `LiveRequestQueue` and `Runner` for communication with Gemini
+```bash
+export GOOGLE_API_KEY=your_google_api_key
+export MEM0_API_KEY=your_mem0_api_key
+cd app/server
+python multimodal_server_adk.py
+```
 
-## Getting Started
+In a second terminal, from the repository root:
 
-### Prerequisites
+```bash
+python3 -m http.server 8000 --directory app/client
+```
 
-- Google Cloud project with API access
-- Python 3.9+
-- Google ADK installed (`pip install google-adk`)
-- A browser with microphone access (and camera or screen-sharing access for video)
+Open [http://localhost:8000/multimodal.html](http://localhost:8000/multimodal.html). The client connects to `ws://localhost:8765`. The frontend rendering has been checked locally; the live model and memory flows require valid external credentials and have not been verified here.
 
-### Installation
+## Repository layout
 
-1. Clone this repository
-   ```
-   git clone https://github.com/MolanoJF/Dara-AI.git
-   cd Dara-AI
-   ```
+- `app/client/` — HTML interface and audio/video WebSocket clients.
+- `app/server/multimodal_server_adk.py` — ADK agent and streaming server.
+- `app/server/agent_tools.py` and `tools/` — example tool and memory integration.
+- `app/server/config/` — model, voice, and system instruction configuration.
+- `app/server/DEPLOYMENT.md` — deployment notes.
 
-2. Install server dependencies
-   ```
-   cd app/server
-   pip install -r requirements.txt
-   ```
-
-3. Set up environment variables
-   The checked-in configuration enables Vertex AI and hard-codes a project ID in `app/server/config/config.py`. Set it to your Google Cloud project, configure application default credentials, and enable the required Vertex AI APIs. The configured preview model may no longer be available. For the alternative developer API endpoint, set `VERTEX_API = False` in that file.
-
-   Create a `.env` file in the `app/server` directory with:
-   ```
-   GOOGLE_API_KEY=your_google_api_key_here
-   MEM0_API_KEY=your_mem0_api_key_here
-   ```
-
-4. Start the server
-   ```
-   ./start_servers.sh
-   ```
-
-5. In a second terminal, serve the client from the repository root:
-   ```bash
-   python -m http.server 8000 --directory app/client
-   ```
-   Open [http://localhost:8000/multimodal.html](http://localhost:8000/multimodal.html). The client connects to `ws://localhost:8765`.
-
-## Deployment
-
-This project includes detailed instructions for deploying to Google Cloud Run with WebSocket support and session affinity. See [DEPLOYMENT.md](app/server/DEPLOYMENT.md) for complete deployment instructions.
-
-Key deployment features:
-- Cloud Run with WebSocket support via annotations
-- Session affinity for stable connections
-- Docker container configuration
-- Artifact Registry integration
-
-## How It Works
-
-The implementation uses several key technologies:
-
-1. **ADK Integration**: The server uses ADK's `LiveRequestQueue` to stream audio and video to Gemini
-2. **WebSockets**: Bidirectional communication between client and server
-3. **Media Processing**: Browser APIs capture and process audio/video
-4. **Async Processing**: Python's asyncio powers the server-side concurrency
-
-### Server Architecture
-
-The server manages several concurrent tasks:
-- WebSocket connection handling
-- Audio processing and streaming
-- Video frame processing
-- Response handling from Gemini
-- Google Search grounding for current information
-- Long-term memory storage and retrieval using Mem0
-
-### Memory Integration
-
-The assistant now has persistent memory capabilities through Mem0:
-- **Conversation Storage**: Automatically saves conversations after each turn
-- **Memory Search**: Can search previous conversations for context
-- **Personal Details**: Remembers user preferences, family members, and important information
-- **Cross-Session**: Memory persists across different chat sessions
-
-### Client Implementation
-
-The client handles:
-- Audio recording and playback
-- Video capture (webcam and screen sharing)
-- WebSocket communication
-- UI updates and transcription display
-
-## Additional Resources
-
-- [Original Article: Going Beyond the ADK CLI](https://github.com/SaschaHeyer/gen-ai-livestream/tree/main/agents/agent-development-kit/live-api/app)
-- [Full Project with Additional Features](https://github.com/SaschaHeyer/gen-ai-livestream/tree/main/multimodal-live-api/ui)
-
-## License
-This project is licensed under the MIT License.
+The project builds on the [original ADK live API example](https://github.com/SaschaHeyer/gen-ai-livestream/tree/main/agents/agent-development-kit/live-api/app). No license file is currently included in this repository.
